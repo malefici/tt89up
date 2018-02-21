@@ -1,0 +1,105 @@
+{% extends 'layout.html' %}
+{% load json %}
+
+{% block body %}
+
+    <h1>Tasks</h1>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Link</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in taskbundle.task_set.all %}
+            <tr>
+                <td>{{ task.link }}</td>
+                <td id="t{{ task.id }}_status">{{ task.status }}</td>
+                <td>
+                    <div id="t{{ task.id }}_actions"{% if not task.is_done %} style="display: none;"{% endif %}>
+                        <a href="{% url 'task_csv' task.pk %}" target="_blank">CSV</a>
+                        <a href="{% url 'task_diagram' task.pk %}" target="_blank">Diagram</a>
+                    </div>
+                    <div id="t{{ task.id }}_processing_label"{% if not task.is_processing %} style="display: none;"{% endif %}>Processing...</div>
+                    <div id="t{{ task.id }}_processing_failed_label"{% if not task.is_failed %} style="display: none;"{% endif %}>Processing failed</div>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    <script>
+        var task_ids = {{ taskbundle.get_task_ids_for_status_check|json_encode|safe }};
+        var status_done = "{{ status_done }}";
+        var status_failed = "{{ status_failed }}";
+
+        function setStatus(task_id, status) {
+            document.getElementById("t" + task_id + "_status").innerHTML = status;
+
+            // hide processing label
+            document.getElementById("t" + task_id + "_processing_label").style.display = 'none';
+
+            if (status === status_failed) {
+                document.getElementById("t" + task_id + "_processing_failed_label").style.display = 'block';
+            }
+
+            if (status === status_done) {
+                document.getElementById("t" + task_id + "_actions").style.display = 'block';
+            }
+        }
+
+        function longPolling(task_id) {
+            var interval;
+
+            interval = setInterval(function() {
+                console.log('Long polling query', task_id);
+
+                var xhr = new XMLHttpRequest();
+                xhr.onreadystatechange = function() {
+                    if (xhr.readyState === 4 && xhr.status === 200) {
+                        var status = JSON.parse(xhr.responseText).status;
+                        console.log(status);
+
+                        if (status === status_done || status === status_failed) {
+                            setStatus(task_id, status);
+                            clearInterval(interval);
+                        }
+                    }
+                };
+                xhr.open('GET', '/tasks/task-status/' + task_id);
+                xhr.send();
+
+            }, 2000);
+        }
+
+        function openWebSocket(task_id) {
+
+            console.log("Opening connection", task_id);
+
+            var ws = new WebSocket("ws://127.0.0.1:8078/notifications/ws?task_id=" + task_id);
+
+            ws.onerror = function() {
+                console.log('Something went wrong with websocket, using long polling');
+                longPolling(task_id);
+            };
+
+            ws.onopen = function() {
+                console.log("Connected");
+            };
+
+            ws.onmessage = function (message) {
+                console.log(message);
+                var data = JSON.parse(message.data);
+                setStatus(task_id, data.status);
+            };
+        }
+
+        window.onload = function () {
+            task_ids.forEach(function (value) {
+                openWebSocket(value);
+            })
+        };
+    </script>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'layout.html' %}
+
+{% block body %}
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-group">
+            {% if form.urls.errors %}
+                {% for error in form.urls.errors %}
+                    <div class="alert alert-warning" role="alert">{{ error|escape }}</div>
+                {% endfor %}
+            {% endif %}
+            <label for="{{ form.urls.id_for_label }}">URLS</label>
+            <textarea id="{{ form.urls.id_for_label }}" class="form-control" name="{{ form.urls.name }}" rows="10"></textarea>
+        </div>
+        <button class="btn btn-primary">Parse!</button>
+    </form>
+{% endblock %}

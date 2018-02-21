@@ -1,0 +1,5 @@
+Django==2.0.2
+jsonfield==2.0.2
+lxml==4.1.1
+pytz==2018.3
+tornado==4.5.3
