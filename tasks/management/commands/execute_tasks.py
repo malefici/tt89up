@@ -9,39 +9,54 @@ from tasks.models import Task
 
 
 class TaskExecutionException(Exception):
+    """
+    Custom exception for handling exceptions from our code.
+    """
     pass
 
 
 def execute_task(task):
+    """
+    Task execution. Requesting and parsing.
+
+    :param task: Task for execution
+    :type task: Task
+    """
+
+    # mark task as processing
     task.status = Task.STATUS_IN_PROGRESS
     task.save()
 
-    # //*[@id="content"]/h1\
-
     try:
+        # get html page with petition description
         handler = request.urlopen(task.link)
         res_html = handler.read()
 
-        # https://petition.parliament.uk/petitions/200292
+        # get JSON data for petition
         handler = request.urlopen(task.link + '.json')
         res_json = handler.read()
 
         # let's parse JSON
         parsed_json = json.loads(res_json.decode("utf-8"))
+
+        # get petition name
+        tree = html.fromstring(res_html.decode("utf-8"))
+        petition_name = tree.xpath('/html/head/title')[0].text[:-12]
     except Exception as e:
+        # Here I handle all exceptions. For more detailed logging or special logic we can except different exceptions
+        # with their handling.
 
         task.status = Task.STATUS_FAILED
         task.status_notes = '{}, {}'.format(type(e), e)
 
         raise TaskExecutionException
     else:
+        # save all parsed data in model
 
         task.result = parsed_json['data']['attributes']['signatures_by_constituency']
         task.result_signature_count = parsed_json['data']['attributes']['signature_count']
 
-        # here can be exceptions too, it's can be covered with different handling scenarios
-        tree = html.fromstring(res_html.decode("utf-8"))
-        task.result_title = tree.xpath('/html/head/title')[0].text[:-12]
+        task.result_title = petition_name
 
         task.status = Task.STATUS_DONE
     finally:
@@ -49,6 +64,9 @@ def execute_task(task):
 
 
 class Command(BaseCommand):
+    """
+    Command for processing task. Here we emulate RQ.
+    """
     help = 'Closes the specified poll for voting'
 
     def add_arguments(self, parser):
@@ -66,12 +84,14 @@ class Command(BaseCommand):
             self.stdout.write('There is no tasks for execution')
             return
 
+        # list tasks for processing
         if options['list']:
             for task in tasks:
                 self.stdout.write('Task "%s"' % task.pk)
             return
 
         for task in tasks:
+            # task execution with exceptions handling
             try:
                 execute_task(task)
             except TaskExecutionException:
@@ -79,9 +99,12 @@ class Command(BaseCommand):
             else:
                 self.stdout.write('Task "%s" completed' % task.pk)
 
+            # notify user via WebSockets about task processing
             try:
                 post_data = parse.urlencode({'task_id': task.pk, 'data': json.dumps({'status': task.status})}).encode()
-                handler = request.urlopen('http://127.0.0.1:8078/notifications/notify', data=post_data)
-                handler.read()
+                request.urlopen('http://127.0.0.1:8078/notifications/notify', data=post_data)
+
+                # here can be logic for Tornado application response
+
             except error.URLError or error.HTTPError:
                 self.stdout.write(self.style.NOTICE('Failed to notice about task execution'))

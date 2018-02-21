@@ -11,6 +11,9 @@ from tasks.models import Task, TaskBundle
 
 
 class TaskBundleInfoView(DetailView):
+    """
+    Bundle tasks info.
+    """
     model = TaskBundle
 
     def get_context_data(self, **kwargs):
@@ -25,6 +28,10 @@ class TaskBundleInfoView(DetailView):
 
 
 class CreateTaskBundleView(FormView):
+    """
+    Main form for bundle creation.
+    """
+
     form_class = CreateTaskBundleForm
     template_name = 'tasks/taskbundle_create.html'
 

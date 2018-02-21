@@ -3,6 +3,9 @@ from jsonfield import JSONField
 
 
 class TaskBundle(models.Model):
+    """
+    Group of tasks for processing
+    """
     created_at = models.DateTimeField(auto_now_add=True)
 
     def get_task_ids_for_status_check(self):
@@ -15,6 +18,9 @@ class TaskBundle(models.Model):
 
 
 class Task(models.Model):
+    """
+    Task class for processing one url.
+    """
     STATUS_NEW = 'new'
     STATUS_IN_PROGRESS = 'in_progress'
     STATUS_DONE = 'done'

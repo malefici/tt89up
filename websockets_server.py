@@ -2,14 +2,14 @@ import tornado.ioloop
 import tornado.web
 import tornado.websocket
 
-
+# here we will save all active sockets
 opened_sockets = {}
 
 
 # noinspection PyAbstractClass
 class SendNotificationHandler(tornado.web.RequestHandler):
     def post(self):
-        task_id = self.get_argument('task_id')
+        task_id = self.get_argument('task_id')  # I like this method, you will get 400 error without any string of code
         data = self.get_argument('data')
 
         if task_id in opened_sockets.keys():
@@ -40,6 +40,8 @@ class WebSocketHandler(tornado.websocket.WebSocketHandler):
 
 
 def make_app():
+    # This patterns naming strategy is a very useful. You can set location '/notifications' in nGinx configuration and
+    # proxy all requests to this application without problems with WSGI.
     return tornado.web.Application([
         (r'/notifications/notify', SendNotificationHandler),
         (r'/notifications/ws', WebSocketHandler),
