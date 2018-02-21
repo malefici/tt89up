@@ -18,7 +18,6 @@ from django.urls import path, include
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
     path('tasks/', include('tasks.urls')),
     path('', RedirectView.as_view(pattern_name='bundle_create', permanent=False), name='index'),
 ]
