@@ -2,7 +2,8 @@
 
 There are two applications based on Django and Tornado. I decided to choose tornado for sending notifications into 
 browser via WebSockets. I do not want to use something like 
-[Django Channels](https://channels.readthedocs.io/en/latest/) in aspect of WSGI protocol stateless.
+[Django Channels](https://channels.readthedocs.io/en/latest/) in aspect of WSGI protocol stateless. This project does 
+not contain tests. 
 
 
 ## How to start
