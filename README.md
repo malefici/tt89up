@@ -34,10 +34,12 @@ After creating tasks for data aggregation, use third terminal with:
 ./manage.py execute_tasks
 ```
 
-With this command we imitate jobs queue and processing tasks manually.
+With this command we can imitate jobs queue or processing tasks manually or use with `systemd`. Also this command can 
+be used with `crond` but one minute is one minute.
 
 
 ## Some words about
 
 Long polling is a alternative for WebSockets. You can test it with stopped Tornado server.
+
 I did not understand task variant with diagrams. I hope that it is what you want.
