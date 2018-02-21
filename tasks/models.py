@@ -31,6 +31,8 @@ class Task(models.Model):
 
     link = models.URLField()
     result = JSONField(default=None)
+
+    # this field is obsolete, counters on parliaments site are not actual
     result_signature_count = models.PositiveIntegerField(null=True)
     result_title = models.CharField(max_length=200, null=True)
 

@@ -84,14 +84,25 @@ class TaskDiagramView(DetailView):
         task = self.get_object()
 
         data = [['MP', 'Percentage']]
+
+        # task.result_signature_count contain not actual data, we must count ourselves
+        calculated_signatures_count = sum(map(lambda r: int(r['signature_count']), task.result))
+
+        # proof of data difference
+        print(calculated_signatures_count, task.result_signature_count)
+
+        for row in task.result:
+            int(row['signature_count'])
+
         for row in task.result:
             signature_count = int(row['signature_count'])
-            data.append([row['mp'], signature_count * 100 / task.result_signature_count])
+            percentage = signature_count * 100 / calculated_signatures_count
+
+            data.append([row['mp'], percentage])
 
         data_json = json.dumps(data, indent=4)
 
         context_data = super().get_context_data()
         context_data['data_json'] = data_json
-        print(context_data['data_json'])
 
         return context_data
