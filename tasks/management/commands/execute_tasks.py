@@ -3,7 +3,6 @@ from urllib import error
 from urllib import request, parse
 
 from django.core.management.base import BaseCommand
-from lxml import html
 
 from tasks.models import Task
 
@@ -37,14 +36,12 @@ def execute_task(task):
     except Exception as e:
         # Here I handle all exceptions. For more detailed logging or special logic we can except different exceptions
         # with their handling.
-
         task.status = Task.STATUS_FAILED
         task.status_notes = '{}, {}'.format(type(e), e)
 
         raise TaskExecutionException
     else:
         # save all parsed data in model
-
         task.result = parsed_json['data']['attributes']['signatures_by_constituency']
         task.result_signature_count = parsed_json['data']['attributes']['signature_count']
         task.result_title = parsed_json['data']['attributes']['action']
