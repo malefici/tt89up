@@ -28,20 +28,12 @@ def execute_task(task):
     task.save()
 
     try:
-        # get html page with petition description
-        handler = request.urlopen(task.link)
-        res_html = handler.read()
-
         # get JSON data for petition
         handler = request.urlopen(task.link + '.json')
         res_json = handler.read()
 
         # let's parse JSON
         parsed_json = json.loads(res_json.decode("utf-8"))
-
-        # get petition name
-        tree = html.fromstring(res_html.decode("utf-8"))
-        petition_name = tree.xpath('/html/head/title')[0].text[:-12]
     except Exception as e:
         # Here I handle all exceptions. For more detailed logging or special logic we can except different exceptions
         # with their handling.
@@ -55,8 +47,7 @@ def execute_task(task):
 
         task.result = parsed_json['data']['attributes']['signatures_by_constituency']
         task.result_signature_count = parsed_json['data']['attributes']['signature_count']
-
-        task.result_title = petition_name
+        task.result_title = parsed_json['data']['attributes']['action']
 
         task.status = Task.STATUS_DONE
     finally:
